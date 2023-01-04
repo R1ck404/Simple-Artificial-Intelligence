@@ -2,10 +2,18 @@
 
 class CryptoPredictor
 {
-    protected $history = [];
-    protected $weights = [];
 
-    function get_historical_data(string $symbol, string $interval) {
+    function get_current_price(string $symbol): float|null {
+        $symbol = strtoupper($symbol);
+        $endpoint = "https://api.binance.com/api/v3/ticker/price?symbol=$symbol";
+        $response = file_get_contents($endpoint);
+        $responseData = json_decode($response, true);
+
+        $price = $responseData["price"];
+        return $price;
+    }
+
+    public function get_historical_data(string $symbol, string $interval): array|null {
         $symbol = strtoupper($symbol);
         
         $api_endpoint = "https://api.binance.com/api/v3/klines";
@@ -41,7 +49,7 @@ class CryptoPredictor
         return $close_prices;
     }
     
-    function make_prediction(string $symbol, string $interval) {
+    public function make_prediction(string $symbol, string $interval): string|float {
         $historical_data = $this->get_historical_data($symbol, $interval);
         if (empty($historical_data))
             return "There was a problem in predicting the price of $symbol.";
@@ -56,7 +64,7 @@ class CryptoPredictor
         return $prediction;
     }
     
-    function linear_regression(array $data) {
+    public function linear_regression(array $data): array {
         if (empty($data))
             return [];
         $x_values = array_keys($data);
@@ -81,9 +89,17 @@ class CryptoPredictor
         return ['slope' => $slope, 'intercept' => $intercept];
     }
     
-    function predict($trendline, $x) {
+    public function predict($trendline, $x): float {
         $prediction = $trendline['slope'] * $x + $trendline['intercept'];
         return $prediction;
+    }
+
+    public function percentage(float $value_A, float $value_B): float {
+        if ($value_A == 0 or $value_B == 0) {
+            return 0;
+        }
+
+        return (($value_B - $value_A) / $value_A) * 100;
     }
 }
 ?>
