@@ -84,15 +84,15 @@ class SimpleAI
             return $this->generate_article($matches[1]);
         }
 
-        if (preg_match('/price(?: prediction)?\s+(?:for\s+)?(\w+)/', $this->preprocess_string($base_input_str), $matches)) {
+       if (preg_match('/\b(?:predict|forecast|do a price prediction).*\b(\w+)/i', $this->preprocess_string($base_input_str), $matches)) {
             $predictor = $this->predictor;
             $symbol = $matches[1];
             
             $current_price = $predictor->get_current_price($symbol);
             $predicted_price = $this->predict_price($symbol);
-            $percentage = $predictor->percentage($current_price, $predicted_price);
-
-            return 'The predicted price for tomorrow of ' . $symbol . ' is ' . $predicted_price . '. (' . $percentage . ')';
+            $percentage = round($predictor->percentage($current_price, $predicted_price), 2);
+            $stringedPercentage = str_starts_with((string) $percentage, '-') ? $percentage : '+' . $percentage;
+            return 'The predicted price for tomorrow of ' . $symbol . ' is ' . $predicted_price . '. (' . $stringedPercentage . '%)';
         }
 
         $input_str = $this->preprocess_string($base_input_str);
